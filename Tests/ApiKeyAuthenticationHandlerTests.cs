@@ -10,6 +10,7 @@ public class ApiKeyAuthenticationHandlerTests
     [Fact]
     public async Task ValidApiKey_ReturnsSuccess()
     {
+        // Arrange
         var options = new Mock<IOptionsMonitor<AuthenticationSchemeOptions>>();
 
         options.Setup(x => x.Get(It.IsAny<string>())).Returns(new AuthenticationSchemeOptions());
@@ -26,8 +27,38 @@ public class ApiKeyAuthenticationHandlerTests
         await handler.InitializeAsync(new AuthenticationScheme("ApiKey", "ApiKey", typeof(ApiKeyAuthenticationHandler)), 
             context);
 
+        // Act
         var result = await handler.AuthenticateAsync();
 
+        // Assert
         Assert.True(result.Succeeded);
+    }
+
+    [Fact]
+    public async Task ValidApiKey_ReturnsFailed()
+    {
+        // Arrange
+        var options = new Mock<IOptionsMonitor<AuthenticationSchemeOptions>>();
+
+        options.Setup(x => x.Get(It.IsAny<string>())).Returns(new AuthenticationSchemeOptions());
+
+        var handler = new ApiKeyAuthenticationHandler(
+            options.Object,
+            NullLoggerFactory.Instance,
+            UrlEncoder.Default);
+
+        var context = new DefaultHttpContext();
+
+        context.Request.Headers["X-API-Key"] = "my-secret-key-wrong";
+
+        await handler.InitializeAsync(new AuthenticationScheme("ApiKey", "ApiKey", typeof(ApiKeyAuthenticationHandler)), 
+            context);
+
+        // Act
+        var result = await handler.AuthenticateAsync();
+        
+        // Assert
+        Assert.False(result.Succeeded);
+        Assert.Equal("Invalid API key", result.Failure!.Message);
     }
 }
