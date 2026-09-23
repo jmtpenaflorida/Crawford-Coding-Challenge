@@ -1,0 +1,12 @@
+[
+  {
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "hasResume": true
+  },
+  {
+    "name": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "hasResume": false
+  }
+]

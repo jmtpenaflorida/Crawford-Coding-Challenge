@@ -1,7 +1,14 @@
+using System.Text.Json.Serialization;
+
 public class Applicant
 {
+    [JsonPropertyName("name")]
     public string Name { get; set; }
+
+    [JsonPropertyName("email")]
     public string Email { get; set; }
+
+    [JsonPropertyName("hasResume")]
     public bool HasResume { get; set; }
 }
 
