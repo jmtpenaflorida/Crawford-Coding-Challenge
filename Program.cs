@@ -16,14 +16,22 @@ app.UseAuthorization();
 
 app.MapGet("/", () => "Hello World inside docker!!!").RequireAuthorization();
 
-app.MapPost("/applicants", async ([FromForm] IFormFile file) =>
+app.MapPost("/applicants", async ([FromForm] IFormCollection files) =>
 {
-    using var stream = file.OpenReadStream();
+    var results = new List<Applicant>();
 
-    var applicants =
-        await JsonSerializer.DeserializeAsync<List<Applicant>>(stream);
+    foreach (var file in files.Files)
+    {
+        using var stream = file.OpenReadStream();
 
-    return Results.Ok(new ApplicantService(applicants).HasResumeApplicants);
+        var applicants =
+            await JsonSerializer.DeserializeAsync<List<Applicant>>(stream)
+            ?? [];
+
+        results.AddRange(new ApplicantService(applicants).HasResumeApplicants);
+    }
+
+    return Results.Ok(results);
 })
 .RequireAuthorization()
 .DisableAntiforgery();
