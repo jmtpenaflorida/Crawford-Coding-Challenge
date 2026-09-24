@@ -111,10 +111,14 @@ ASP.NET Core will display the URL where the API is listening.
 
     SecureFileApi/
     ├── Program.cs
-    ├── ApiKeyAuthenticationHandler.cs
-    ├── Applicant.cs
-    ├── ApplicantService.cs
-    ├── FileProcessor.cs
+    ├── Authentication/
+        ├── ApiKeyAuthenticationHandler.cs
+    ├── Models
+        ├── Applicant.cs
+        ├── ApplicantResult.cs
+    ├── Services
+        ├── ApplicantService.cs
+        ├── FileProcessor.cs
     ├── FileValidator.cs
     ├── Dockerfile
     └── Tests/
