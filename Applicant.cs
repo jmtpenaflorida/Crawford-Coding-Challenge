@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 public class Applicant
@@ -12,17 +14,64 @@ public class Applicant
     public bool HasResume { get; set; }
 }
 
-public class ApplicantService
+public class ApplicantResult
 {
-    private readonly List<Applicant> _applicants;
+    public string FileName { get; set; }
+    public long ProcessingTime { get; set; }
+    public List<Applicant> FilteredApplicants { get; set; }
+}
 
-    public ApplicantService(List<Applicant> applicants)
+
+public interface IApplicantService
+{
+    Task<ApplicantResult> ProcessApplicants(IFormFile file);
+}
+
+public class ApplicantService : IApplicantService
+{
+    private readonly IFileProcessor _fileProcessor;
+
+    public ApplicantService(IFileProcessor fileProcessor)
     {
-        _applicants = applicants;
+        _fileProcessor = fileProcessor;
     }
-
-    public List<Applicant> HasResumeApplicants
+    
+    public async Task<ApplicantResult> ProcessApplicants(IFormFile file)
     {
-        get { return _applicants.Where(a => a.HasResume).ToList(); }
+        var results = new List<ApplicantResult>();
+
+        var stopwatch = Stopwatch.StartNew();
+        
+        var applicants = await _fileProcessor.ProcessFile(file);
+
+        var filteredApplicants = applicants.Where(a => a.HasResume).ToList();
+
+        stopwatch.Stop();
+
+        return new ApplicantResult
+        {
+            FileName = file.FileName,
+            ProcessingTime = stopwatch.ElapsedMilliseconds,
+            FilteredApplicants = filteredApplicants
+        };
+    }
+}
+
+public interface IFileProcessor
+{
+    Task<List<Applicant>> ProcessFile(IFormFile file);
+}
+
+public class FileProcessor : IFileProcessor
+{
+    public async Task<List<Applicant>> ProcessFile(IFormFile file)
+    {
+        using var stream = file.OpenReadStream();
+
+        var applicants =
+            await JsonSerializer.DeserializeAsync<List<Applicant>>(stream)
+            ?? [];
+
+        return applicants;
     }
 }
