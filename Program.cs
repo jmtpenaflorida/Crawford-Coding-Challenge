@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
@@ -18,20 +19,34 @@ app.MapGet("/", () => "Hello World inside docker!!!").RequireAuthorization();
 
 app.MapPost("/applicants", async ([FromForm] IFormCollection files) =>
 {
-    var results = new List<Applicant>();
+    var results = new List<object>();
 
     foreach (var file in files.Files)
     {
+        var stopwatch = Stopwatch.StartNew();
+
         using var stream = file.OpenReadStream();
 
         var applicants =
             await JsonSerializer.DeserializeAsync<List<Applicant>>(stream)
             ?? [];
 
-        results.AddRange(new ApplicantService(applicants).HasResumeApplicants);
+        var filteredApplicants = new ApplicantService(applicants).HasResumeApplicants;
+
+        stopwatch.Stop();
+
+        results.AddRange(new
+        {
+            file.FileName,
+            stopwatch.ElapsedMilliseconds,
+            filteredApplicants
+        });
     }
 
-    return Results.Ok(results);
+    return Results.Ok(new {
+        FilesProcessed = results.Count,
+        results
+    });
 })
 .RequireAuthorization()
 .DisableAntiforgery();
