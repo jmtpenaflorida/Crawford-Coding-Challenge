@@ -53,6 +53,6 @@ public class FileValidator : IFileValidator
 {
     public bool IsValid(IFormFile file)
     {
-        return file.ContentType == "application/json";
+        return file.FileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase);
     }
 }
